@@ -1,4 +1,14 @@
---выборка
-select *
-dqwqe
-eqwe
+--сброс префиксов в имени пользователя
+alter session set "_ORACLE_SCRIPT"=true
+
+--создаине пользователя с паролем
+CREATE USER USERS_1 IDENTIFIED BY Sql$1
+
+--даем пользователю возможность создавать сессии
+GRANT
+
+--разблокировать пользователя
+ALTER USER USERS_1 ACCOUNT UNLOCK
+
+--удаление пользователя и всех его объектов
+DROP USER USERS_1 CASCADE
