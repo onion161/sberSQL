@@ -1,14 +1,98 @@
---сброс префиксов в имени пользователя
+--установка ORACLE SCRIPT в сессии
 alter session set "_ORACLE_SCRIPT"=true
+--Просмотр пользователей под SYS
+SELECT * FROM dba_users
 
 --создаине пользователя с паролем
 CREATE USER USERS_1 IDENTIFIED BY Sql$1
 
---даем пользователю возможность создавать сессии
-GRANT
+--даем пользователю привелегию создавать сессии
+GRANT CREATE SESSION TO USERS_1
 
+--даем пользователю привелегию просмотра таблицы
+GRANT SELECT ANY TABLE TO USERS_1
 --разблокировать пользователя
 ALTER USER USERS_1 ACCOUNT UNLOCK
 
 --удаление пользователя и всех его объектов
 DROP USER USERS_1 CASCADE
+--создание таблицы AGE
+CREATE TABLE AGE
+(
+NAME VARCHAR2(10),
+AGE NUMBER(3)
+)
+--просмотр таблицы AGE
+SELECT*FROM AGE
+--добавляем данные в AGE
+INSERT INTO AGE VALUES ('TOM',23)
+
+--создаине пользователя с паролем
+CREATE USER USERS_2 IDENTIFIED BY Sql$2
+ALTER USER USERS_2 DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS
+
+--создание роли администратора таблиц
+CREATE ROLE ADMIN_TB
+
+--установки привелегии роли ADMIN_TB
+GRANT 
+CREATE SESSION, 
+CREATE ANY TABLE,
+SELECT ANY TABLE,
+UPDATE ANY TABLE, 
+INSERT ANY TABLE
+TO ADMIN_TB
+
+--Установка роли ADMIN_TB пользователю USERS_2
+GRANT ADMIN_TB TO USERS_2
+
+--установка привелегии на создание счетчика для ADMIN_TB
+GRANT 
+CREATE SEQUENCE
+TO ADMIN_TB
+--создаем счетчик id
+CREATE SEQUENCE id
+  MINVALUE 1
+  START WITH 1
+  INCREMENT BY 1
+  CACHE 20;
+  
+--создаем таблицу организации
+  CREATE TABLE organization(
+id NUMBER,
+name VARCHAR2(2000),
+PhoneNumber VARCHAR2(100),
+) 
+
+SELECT * FROM organization
+
+--добавляем значения
+INSERT INTO organization (id, name, PhoneNumber) VALUES (id.NEXTVAL, 'OOO Мама', 79999999)
+INSERT INTO organization (id, name, PhoneNumber) VALUES (id.NEXTVAL, 'OOO Папа', 78888888)
+
+--создаем таблицу сотркдники
+CREATE TABLE employees
+( 
+id    NUMBER GENERATED ALWAYS AS IDENTITY,
+name     VARCHAR2(20),
+organization_id NUMBER
+) 
+
+SELECT * FROM employees
+--добавляем сотрудников
+INSERT INTO employees (name, organization_id) VALUES ('Tom', 1)
+INSERT INTO employees (name, organization_id) VALUES ('Andry', 2)
+
+--связываем id
+ALTER TABLE organization ADD PRIMARY KEY (ID)
+
+ALTER TABLE employees
+ADD ( 
+CONSTRAINT     organization_id
+                       FOREIGN KEY (id)
+                         REFERENCES organization
+    )
+    
+SELECT *
+FROM employees
+JOIN organization ON organization.id = employees.organization_id
