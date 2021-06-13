@@ -69,6 +69,7 @@ SELECT * FROM organization
 --добавляем значения
 INSERT INTO organization (id, name, PhoneNumber) VALUES (id.NEXTVAL, 'OOO Мама', 79999999)
 INSERT INTO organization (id, name, PhoneNumber) VALUES (id.NEXTVAL, 'OOO Папа', 78888888)
+INSERT INTO organization (id, name, PhoneNumber, REGISTRATIONDATE) VALUES (id.NEXTVAL, 'OOO Брат', 77777777, (to_date('2011/04/22 08:30:00', 'yyyy/mm/dd hh24:mi:ss')))
 
 --создаем таблицу сотркдники
 CREATE TABLE employees
@@ -110,3 +111,56 @@ order by COUNT(*) desc
 -- индексы на основные таблицы
 CREATE INDEX employees ON employees (id,name,organization_id)
 CREATE INDEX organization ON organization (id,name)
+
+--таблица с продуктами
+CREATE TABLE items
+( 
+id    NUMBER GENERATED ALWAYS AS IDENTITY,
+name VARCHAR2(2000),
+price NUMBER (9,2)
+) 
+
+SELECT * FROM items
+
+INSERT INTO items (name, price) VALUES ('Ручка', 20.50)
+INSERT INTO items (name, price) VALUES ('Карандаш', 10)
+
+--таблица продаж
+CREATE TABLE sales
+( 
+id    NUMBER GENERATED ALWAYS AS IDENTITY,
+items_id int,
+quantity int,
+employees_id int
+) 
+
+SELECT * FROM sales
+
+ALTER TABLE sales add 
+(
+Dateofsale date
+)
+
+INSERT INTO sales (items_id,quantity,employees_id, Dateofsale ) VALUES (1,2,1,(to_date('2011/04/22', 'yyyy/mm/dd')))
+INSERT INTO sales (items_id,quantity,employees_id, Dateofsale ) VALUES (2,5,25,(to_date('2011/06/07', 'yyyy/mm/dd')))
+
+-- связываем оставшиеся таблицы
+ALTER TABLE items ADD PRIMARY KEY (ID)
+
+ALTER TABLE sales
+ADD 
+(
+CONSTRAINT items_id FOREIGN KEY (items_id) REFERENCES items(id)
+)
+
+ALTER TABLE employees ADD PRIMARY KEY (ID)
+
+ALTER TABLE sales
+ADD 
+(
+CONSTRAINT employees_id FOREIGN KEY (employees_id) REFERENCES employees(id)
+)
+
+
+
+
