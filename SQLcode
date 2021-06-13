@@ -82,13 +82,31 @@ SELECT * FROM employees
 --добавляем сотрудников
 INSERT INTO employees (name, organization_id) VALUES ('Tom', 1)
 INSERT INTO employees (name, organization_id) VALUES ('Andry', 2)
+INSERT INTO employees (name, organization_id) VALUES ('Jony', 2)
 
+delete from employees where id=2
 --связываем id
 ALTER TABLE organization ADD PRIMARY KEY (ID)
 
 ALTER TABLE employees
 ADD (CONSTRAINT organization_id_1 FOREIGN KEY (organization_id) REFERENCES organization(id))
-    
+
+--сортироака    
 SELECT *
-FROM employees
-JOIN organization ON organization.id = employees.organization_id
+FROM employees emp
+JOIN organization org ON org.id = emp.organization_id
+order by emp.organization_id
+
+--подсчет всех сотрудников и уникальных организаций у сотрудников
+SELECT COUNT(id) FROM employees
+SELECT COUNT(DISTINCT organization_id) FROM employees
+
+--подсчет сотрудников в организации и сортировка от большего к меньшему
+SELECT org.name as оргинизация, COUNT(*) as сотрудников FROM employees emp
+JOIN organization org ON org.id = emp.organization_id
+group by org.name
+order by COUNT(*) desc
+
+-- индексы на основные таблицы
+CREATE INDEX employees ON employees (id,name,organization_id)
+CREATE INDEX organization ON organization (id,name)
