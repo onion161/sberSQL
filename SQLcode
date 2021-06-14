@@ -161,6 +161,15 @@ ADD
 CONSTRAINT employees_id FOREIGN KEY (employees_id) REFERENCES employees(id)
 )
 
-
+--отчет по продажам
+SELECT  
+org.name as Оргинизация,
+emp.name as Продавец,
+it.name ||' - '|| it.price ||'шт' as Продукт,
+s.quantity*it.price as Продажа
+FROM sales s
+JOIN items it on s.id = it.id
+JOIN employees emp on emp.id=s.employees_id
+JOIN organization org on org.id=emp.organization_id
 
 
