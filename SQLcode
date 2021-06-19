@@ -172,4 +172,68 @@ JOIN items it on s.id = it.id
 JOIN employees emp on emp.id=s.employees_id
 JOIN organization org on org.id=emp.organization_id
 
+--Аналитические функции
+SELECT FIRST_NAME, DEPARTMENT_ID, JOB_ID, SALARY, 
+        MIN(SALARY) OVER (PARTITION BY DEPARTMENT_ID) minSALARY,
+        MAX(SALARY) OVER (PARTITION BY DEPARTMENT_ID) maxSALARY,
+        SUM(SALARY) OVER (PARTITION BY DEPARTMENT_ID) sumSALARY
+FROM HR.EMPLOYEES
+----
+SELECT FIRST_NAME, DEPARTMENT_ID, JOB_ID, SALARY, MANAGER_ID,
+        MIN(SALARY) OVER (PARTITION BY DEPARTMENT_ID, MANAGER_ID) minSALARY,
+        MAX(SALARY) OVER (PARTITION BY DEPARTMENT_ID, MANAGER_ID) maxSALARY,
+        SUM(SALARY) OVER (PARTITION BY DEPARTMENT_ID, MANAGER_ID) sumSALARY
+FROM HR.EMPLOYEES
+order by MANAGER_ID
+----
+SELECT FIRST_NAME, DEPARTMENT_ID, JOB_ID, SALARY, HIRE_DATE,
+SUM(SALARY)
+OVER (ORDER BY HIRE_DATE
+RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW ) sumSALARY
+FROM HR.EMPLOYEES;
+----
+SELECT FIRST_NAME, DEPARTMENT_ID, JOB_ID, SALARY, HIRE_DATE,
+SUM(SALARY)
+OVER (ORDER BY HIRE_DATE
+ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW ) sumSALARY
+FROM HR.EMPLOYEES;
+
+--таблица с иерархическими данными
+create table departments_hierarchy(
+id     NUMBER,
+pid    NUMBER,
+name   VARCHAR2(250),
+coef   NUMBER
+);
+
+SELECT * FROM departments_hierarchy
+
+INSERT ALL
+INTO departments_hierarchy VALUES (1,NULL,'Директор', 100)
+INTO departments_hierarchy VALUES (2,1,'Главный юрист', 90)
+INTO departments_hierarchy VALUES (3,1,'Главный экономист', 80)
+INTO departments_hierarchy VALUES (4,2,'Юрист', 70)
+INTO departments_hierarchy VALUES (5,3,'Экономист', 60)
+INTO departments_hierarchy VALUES (6,5,'Бухгалтер', 50)
+SELECT * FROM dual;
+
+SELECT level, pid, name
+FROM departments_hierarchy
+START WITH pid is null
+CONNECT BY PRIOR  id=pid
+ORDER SIBLINGS BY NAME;
+
+SELECT level, id, pid, 
+       lpad('-',2*level,'-')||name as ДЛИНА
+FROM departments_hierarchy
+START WITH pid is NULL
+CONNECT BY PRIOR  id = pid
+ORDER SIBLINGS BY NAME;
+
+
+
+
+
+
+
 
