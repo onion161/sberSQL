@@ -172,32 +172,6 @@ JOIN items it on s.id = it.id
 JOIN employees emp on emp.id=s.employees_id
 JOIN organization org on org.id=emp.organization_id
 
---Аналитические функции
-SELECT FIRST_NAME, DEPARTMENT_ID, JOB_ID, SALARY, 
-        MIN(SALARY) OVER (PARTITION BY DEPARTMENT_ID) minSALARY,
-        MAX(SALARY) OVER (PARTITION BY DEPARTMENT_ID) maxSALARY,
-        SUM(SALARY) OVER (PARTITION BY DEPARTMENT_ID) sumSALARY
-FROM HR.EMPLOYEES
-----
-SELECT FIRST_NAME, DEPARTMENT_ID, JOB_ID, SALARY, MANAGER_ID,
-        MIN(SALARY) OVER (PARTITION BY DEPARTMENT_ID, MANAGER_ID) minSALARY,
-        MAX(SALARY) OVER (PARTITION BY DEPARTMENT_ID, MANAGER_ID) maxSALARY,
-        SUM(SALARY) OVER (PARTITION BY DEPARTMENT_ID, MANAGER_ID) sumSALARY
-FROM HR.EMPLOYEES
-order by MANAGER_ID
-----
-SELECT FIRST_NAME, DEPARTMENT_ID, JOB_ID, SALARY, HIRE_DATE,
-SUM(SALARY)
-OVER (ORDER BY HIRE_DATE
-RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW ) sumSALARY
-FROM HR.EMPLOYEES;
-----
-SELECT FIRST_NAME, DEPARTMENT_ID, JOB_ID, SALARY, HIRE_DATE,
-SUM(SALARY)
-OVER (ORDER BY HIRE_DATE
-ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW ) sumSALARY
-FROM HR.EMPLOYEES;
-
 --таблица с иерархическими данными
 create table departments_hierarchy(
 id     NUMBER,
@@ -230,10 +204,62 @@ START WITH pid is NULL
 CONNECT BY PRIOR  id = pid
 ORDER SIBLINGS BY NAME;
 
+--Папава на v$sql
+GRANT SELECT ON v_$session TO ADMIN_TB
+grant select on v_$sql_plan_statistics_all to ADMIN_TB
+grant select on v_$sql_plan to ADMIN_TB
+grant select on v_$sql to ADMIN_TB
+
+--Просмотр плана запроса
+SELECT
+org.name as Оргинизация,
+emp.name as Продавец,
+it.name ||' - '|| it.price ||'шт' as Продукт,
+s.quantity*it.price as Продажа
+FROM sales s
+JOIN items it on s.id = it.id
+JOIN employees emp on emp.id=s.employees_id
+JOIN organization org on org.id=emp.organization_id
+
+select * from table(dbms_xplan.display_cursor(sql_id=>'29npv9tc2h3ch', format=>'ALLSTATS LAST'));
+
+select * from v$sql_plan_statistics_all where sql_id='29npv9tc2h3ch'
+
+--Хинты
+/*+ ALL_ROWS */
+/*+ CURSOR_SHARING_EXACT */
+/*+ LEADING(employees) */
+/*+ USE_HASH( sales items employees organization ) */
+/*+ NO_USE_HASH */
+SELECT /*+ NO_USE_HASH sales items employees organization */
+org.name as Оргинизация,
+emp.name as Продавец,
+it.name ||' - '|| it.price ||'шт' as Продукт,
+s.quantity*it.price as Продажа
+FROM sales s
+JOIN items it on s.id = it.id
+JOIN employees emp on emp.id=s.employees_id
+JOIN organization org on org.id=emp.organization_id
 
 
+--права на статистикe
+grant ANALYZE ANY to ADMIN_TB
+--статистика
+BEGIN
+DBMS_STATS.GATHER_TABLE_STATS ('organization');
+--добавляем статустику
+EXEC DBMS_STATS.GATHER_SCHEMA_STATS('USERS_2');
+-- удаляем статустику
+BEGIN
+DBMS_STATS.DELETE_SCHEMA_STATS('USERS_2');
+END;
+/
 
+BEGIN
+DBMS_STATS.GATHER_TABLE_STATS ('employees');
+END;
 
-
+SELECT *
+FROM USER_TAB_STATISTICS
 
 
